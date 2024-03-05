@@ -1,7 +1,7 @@
 
 resource "azurerm_resource_group" "myRG" {
-  name     = "RG-IS"
-  location = "francecentral"
+  name     = var.resourceaccount
+  location = var.location
 }
 
 #create virtual network
@@ -78,7 +78,7 @@ resource "azurerm_linux_virtual_machine" "my_terraform_vm" {
   admin_username        = var.username
 
   admin_ssh_key {
-    username = var.username
+    username   = var.username
     public_key = tls_private_key.key.public_key_openssh
   }
 
@@ -95,7 +95,7 @@ resource "azurerm_linux_virtual_machine" "my_terraform_vm" {
     version   = "latest"
   }
 
-  depends_on = [ azurerm_network_interface.terraformNIC,
-   tls_private_key.key
-   ]
+  depends_on = [azurerm_network_interface.terraformNIC,
+    tls_private_key.key
+  ]
 }
