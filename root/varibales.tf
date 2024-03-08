@@ -9,3 +9,4 @@ variable "resourceaccount" {
 variable "location" {
   default = "francecentral"
 }
+
