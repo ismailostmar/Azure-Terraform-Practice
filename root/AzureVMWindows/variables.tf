@@ -1,15 +1,15 @@
 variable "resourceaccountWin" {
-  type = string
+  type    = string
   default = "RG-IS"
 }
 
 variable "Location" {
-  type = string
+  type    = string
   default = "francecentrale"
 }
 
 variable "username" {
-  type = string
+  type    = string
   default = "azureadmin"
 }
 

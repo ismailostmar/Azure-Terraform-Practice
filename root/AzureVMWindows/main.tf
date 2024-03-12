@@ -1,42 +1,42 @@
 #Defining the resouce Group
 resource "azurerm_resource_group" "RG" {
-  name = var.resourceaccountWin
+  name     = var.resourceaccountWin
   location = var.Location
 }
 
 #Create Virtual Network
 resource "azurerm_virtual_network" "WinVirtualNetwork" {
-  name = "${random_pet.prefix.id}-vnet"
-  address_space = ["10.0.0.0/16"]
-  location = azurerm_resource_group.RG.location
+  name                = "${random_pet.prefix.id}-vnet"
+  address_space       = ["10.0.0.0/16"]
+  location            = azurerm_resource_group.RG.location
   resource_group_name = azurerm_resource_group.RG.name
 }
 
 #Create Azure Subnet
 resource "azurerm_subnet" "WinSubnet" {
-  name = "${random_pet.prefix.id}-Subnet"
+  name                 = "${random_pet.prefix.id}-Subnet"
   virtual_network_name = azurerm_virtual_network.WinVirtualNetwork.name
-  resource_group_name = azurerm_resource_group.RG.name
-  address_prefixes = [ "10.0.1.0/24"]
+  resource_group_name  = azurerm_resource_group.RG.name
+  address_prefixes     = ["10.0.1.0/24"]
 }
 
 #Create Azure Network Interface
 resource "azurerm_network_interface" "WinNetworkInterface" {
-  name = "${random_pet.prefix.id}-WinNetworkInterface"
-  location = azurerm_resource_group.RG.location
+  name                = "${random_pet.prefix.id}-WinNetworkInterface"
+  location            = azurerm_resource_group.RG.location
   resource_group_name = azurerm_resource_group.RG.name
 
   ip_configuration {
-    name = "internal"
-    subnet_id = azurerm_subnet.WinSubnet.id
+    name                          = "internal"
+    subnet_id                     = azurerm_subnet.WinSubnet.id
     private_ip_address_allocation = "Dynamic"
   }
 }
 
 #Create a Network Security Group & Rules
 resource "azurerm_network_security_group" "WinNSG" {
-  name = "WinNSG"
-  location = azurerm_resource_group.RG.location
+  name                = "WinNSG"
+  location            = azurerm_resource_group.RG.location
   resource_group_name = azurerm_resource_group.RG.name
 
   security_rule {
@@ -66,7 +66,7 @@ resource "azurerm_network_security_group" "WinNSG" {
 
 #Create the security group to the network interface
 resource "azurerm_network_interface_security_group_association" "WinNISG" {
-  network_interface_id = azurerm_network_interface.WinNetworkInterface.id
+  network_interface_id      = azurerm_network_interface.WinNetworkInterface.id
   network_security_group_id = azurerm_network_security_group.WinNSG.id
 }
 # Create storage account for boot diagnostics
@@ -80,25 +80,25 @@ resource "azurerm_storage_account" "WINStorageAccount" {
 
 #Create Virtual Machine
 resource "azurerm_windows_virtual_machine" "VMWinServer" {
-  name = "${random_pet.prefix.id}-VMWinServer"
-  admin_username = var.username
-  admin_password = random_password.password.result
-  location = azurerm_resource_group.RG.location
-  resource_group_name = azurerm_resource_group.RG.name
-  network_interface_ids = [ azurerm_network_interface.WinNetworkInterface.id ]
-  size = "Standard_DS1_v2"
+  name                  = "${random_pet.prefix.id}-VMWinServer"
+  admin_username        = var.username
+  admin_password        = random_password.password.result
+  location              = azurerm_resource_group.RG.location
+  resource_group_name   = azurerm_resource_group.RG.name
+  network_interface_ids = [azurerm_network_interface.WinNetworkInterface.id]
+  size                  = "Standard_DS1_v2"
 
   os_disk {
-    name = "myOSDisk"
-    caching = "ReadWrite"
+    name                 = "myOSDisk"
+    caching              = "ReadWrite"
     storage_account_type = "Standard_LRS"
   }
 
   source_image_reference {
     publisher = "MicrosoftWindowsServer"
-    offer = "WindowsServer"
-    sku = "2022-datacenter-azure-edition"
-    version = "latest"
+    offer     = "WindowsServer"
+    sku       = "2022-datacenter-azure-edition"
+    version   = "latest"
   }
 
   boot_diagnostics {
@@ -108,19 +108,21 @@ resource "azurerm_windows_virtual_machine" "VMWinServer" {
 
 #Install IIS web server to the Virtual Machine
 resource "azurerm_virtual_machine_extension" "web_server_install" {
-  name = "IIS-wsi"
-  virtual_machine_id = azurerm_windows_virtual_machine.VMWinServer.id
-  publisher = "Microsoft.Compute"
-  type = "CustomScriptExtension"
-  type_handler_version = "1.8"
+  name                       = "IIS-wsi"
+  virtual_machine_id         = azurerm_windows_virtual_machine.VMWinServer.id
+  publisher                  = "Microsoft.Compute"
+  type                       = "CustomScriptExtension"
+  type_handler_version       = "1.8"
   auto_upgrade_minor_version = true
 
   settings = <<SETTINGS
   {
     "commandToExecute": "powershell -ExecutionPolicy Unrestricted Install-WindowsFeature -Name Web-Server -IncludeAllSubFeature -IncludeManagementTools"
   }
-  SETTINGS
+  SETTINGS 
 }
+
+
 
 # Generate random text for a unique storage account name
 resource "random_id" "random_id" {
@@ -131,6 +133,8 @@ resource "random_id" "random_id" {
   byte_length = 8
 }
 
+
+
 resource "random_password" "password" {
   length      = 20
   min_lower   = 1
@@ -139,6 +143,8 @@ resource "random_password" "password" {
   min_special = 1
   special     = true
 }
+
+
 
 resource "random_pet" "prefix" {
   prefix = var.prefix
